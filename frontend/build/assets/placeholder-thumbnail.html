@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Model Tutorial Thumbnail</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .thumbnail {
+            width: 1280px;
+            height: 720px;
+            background: linear-gradient(135deg, #1e1e2f 0%, #2c2c54 100%);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            background-color: rgba(0, 188, 212, 0.9);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-top: 25px solid transparent;
+            border-left: 40px solid white;
+            border-bottom: 25px solid transparent;
+            margin-left: 10px;
+        }
+        .title {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+        .subtitle {
+            position: absolute;
+            top: 120px;
+            left: 50px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 28px;
+            font-weight: 400;
+            max-width: 60%;
+        }
+        .model-preview {
+            position: absolute;
+            right: 50px;
+            bottom: 50px;
+            width: 400px;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .steps {
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            color: white;
+        }
+        .steps h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #00bcd4;
+        }
+        .steps ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .steps li {
+            margin-bottom: 5px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        .instructions {
+            position: fixed;
+            bottom: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="thumbnail">
+        <div class="title">3D Face Model Tutorial</div>
+        <div class="subtitle">Learn how to import, view, and use your generated 3D model in any 3D software</div>
+        
+        <div class="model-preview">
+            [3D Model Preview]
+        </div>
+        
+        <div class="steps">
+            <h3>In This Tutorial:</h3>
+            <ul>
+                <li>Importing OBJ & MTL files</li>
+                <li>Applying textures correctly</li>
+                <li>Basic model manipulation</li>
+                <li>Exporting for various uses</li>
+            </ul>
+        </div>
+        
+        <div class="play-button">
+            <div class="play-icon"></div>
+        </div>
+    </div>
+    
+    <div class="instructions">
+        Take a screenshot of this page (Windows: Win+Shift+S, Mac: Cmd+Shift+4)<br>
+        Save as "demo-thumbnail.jpg" in the assets folder
+    </div>
+</body>
+</html> 

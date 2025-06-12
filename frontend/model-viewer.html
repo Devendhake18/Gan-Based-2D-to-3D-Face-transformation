@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Face Model Viewer</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #262660; }
+        #container { width: 100%; height: 100vh; }
+        .loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Arial, sans-serif; font-size: 16px; color: white; text-align: center; }
+        .error-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: Arial, sans-serif; font-size: 16px; color: #f44336; text-align: center; max-width: 80%; }
+        .controls { position: absolute; bottom: 20px; left: 20px; display: flex; gap: 10px; }
+        .btn { padding: 8px 12px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: rgba(0,0,0,0.8); }
+        .instructions { position: absolute; bottom: 20px; right: 20px; color: white; font-family: Arial, sans-serif; font-size: 14px; text-align: right; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/MTLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/OBJLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+</head>
+<body>
+    <div id="container">
+        <div id="loading" class="loading">Loading 3D model...</div>
+        <div id="error" class="error-message" style="display: none;"></div>
+    </div>
+    <div class="controls">
+        <button id="resetBtn" class="btn">Reset View</button>
+        <button id="wireframeBtn" class="btn">Wireframe</button>
+        <button id="textureBtn" class="btn">Toggle Texture</button>
+        <button id="rotateBtn" class="btn">Auto-rotate</button>
+    </div>
+    <div class="instructions">Drag to rotate • Scroll to zoom</div>
+
+    <script>
+        // Get job ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const jobId = urlParams.get('id');
+        
+        if (!jobId) {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('error').style.display = 'block';
+            document.getElementById('error').textContent = 'No job ID provided. Please generate a face model first.';
+        } else {
+            // Setup Three.js scene
+            const container = document.getElementById('container');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x262660); // Dark blue background to match the main app
+            
+            // Camera setup - adjusted for better view of the face
+            const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 3.5; // Move camera back to see full face
+            camera.position.y = 0.5; // Adjust height to center face
+            
+            // Renderer with alpha and antialias
+            const renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                alpha: true,
+                powerPreference: 'high-performance'
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+            
+            // Controls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.25;
+            controls.target.set(0, 0, 0); // Set controls target to origin
+            controls.minDistance = 2; // Don't allow zooming too close
+            controls.maxDistance = 10; // Don't allow zooming too far
+            
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(2, 2, 2);
+            scene.add(directionalLight);
+            
+            // Add additional fill light
+            const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+            fillLight.position.set(-2, 0, 2);
+            scene.add(fillLight);
+            
+            // Group to hold the model
+            const modelGroup = new THREE.Group();
+            scene.add(modelGroup);
+            
+            // Create orbital rings around the model
+            function createOrbitRings() {
+                // Create three rings in different orientations
+                const ringGeometry1 = new THREE.TorusGeometry(1.8, 0.02, 16, 100);
+                const ringGeometry2 = new THREE.TorusGeometry(1.8, 0.02, 16, 100);
+                const ringGeometry3 = new THREE.TorusGeometry(1.8, 0.02, 16, 100);
+                
+                // Material for rings
+                const ringMaterial1 = new THREE.MeshBasicMaterial({ color: 0xff9999, transparent: true, opacity: 0.6 });
+                const ringMaterial2 = new THREE.MeshBasicMaterial({ color: 0x99ff99, transparent: true, opacity: 0.6 });
+                const ringMaterial3 = new THREE.MeshBasicMaterial({ color: 0x9999ff, transparent: true, opacity: 0.6 });
+                
+                // Create meshes
+                const ring1 = new THREE.Mesh(ringGeometry1, ringMaterial1);
+                const ring2 = new THREE.Mesh(ringGeometry2, ringMaterial2);
+                const ring3 = new THREE.Mesh(ringGeometry3, ringMaterial3);
+                
+                // Set different orientations
+                ring2.rotation.x = Math.PI / 2;
+                ring3.rotation.z = Math.PI / 2;
+                
+                // Add to scene
+                scene.add(ring1);
+                scene.add(ring2);
+                scene.add(ring3);
+                
+                return [ring1, ring2, ring3];
+            }
+            
+            const rings = createOrbitRings();
+            
+            // Variables for model components
+            let model = null;
+            
+            // API base URL and file paths
+            const API_BASE_URL = getApiBaseUrl();
+            const mtlUrl = `${API_BASE_URL}/api/download/${jobId}/face_mesh.mtl`;
+            const objUrl = `${API_BASE_URL}/api/download/${jobId}/face_mesh.obj`;
+            const textureUrl = `${API_BASE_URL}/api/download/${jobId}/face_texture.jpg`;
+            
+            // Function to determine API base URL
+            function getApiBaseUrl() {
+                // If the URL includes ngrok, use the current domain
+                if (window.location.hostname.includes('ngrok')) {
+                    return window.location.origin;
+                }
+                // Otherwise use the default local URL
+                return window.location.hostname === 'localhost' ? 
+                    'http://localhost:5000' : '/api';
+            }
+            
+            // Load MTL file using fetch first to avoid WebGL warnings
+            console.log('Loading MTL file from:', mtlUrl);
+            const mtlLoader = new THREE.MTLLoader();
+            
+            // Use fetch to get raw file content
+            fetch(mtlUrl)
+                .then(response => {
+                    if (!response.ok) throw new Error(`MTL file HTTP error: ${response.status}`);
+                    return response.text();
+                })
+                .then(mtlContent => {
+                    // Parse MTL content directly
+                    const materials = mtlLoader.parse(mtlContent, '');
+                    materials.preload();
+                    
+                    console.log('MTL loaded successfully');
+                    document.getElementById('loading').textContent = 'Loading 3D model...';
+                    
+                    // Get OBJ content with fetch
+                    return fetch(objUrl)
+                        .then(response => {
+                            if (!response.ok) throw new Error(`OBJ file HTTP error: ${response.status}`);
+                            return response.text();
+                        })
+                        .then(objContent => {
+                            // Parse OBJ content directly
+                            const objLoader = new THREE.OBJLoader();
+                            objLoader.setMaterials(materials);
+                            model = objLoader.parse(objContent);
+                            
+                            console.log('OBJ loaded successfully');
+                            document.getElementById('loading').textContent = 'Loading texture...';
+                            
+                            // Center the model
+                            const box = new THREE.Box3().setFromObject(model);
+                            const center = box.getCenter(new THREE.Vector3());
+                            model.position.sub(center);
+                            
+                            // Load texture separately
+                            const textureLoader = new THREE.TextureLoader();
+                            
+                            // Return a promise
+                            return new Promise((resolve, reject) => {
+                                textureLoader.load(
+                                    textureUrl,
+                                    (texture) => {
+                                        // Configure texture to avoid warnings
+                                        texture.premultiplyAlpha = false;
+                                        texture.flipY = false;
+                                        
+                                        // Apply texture to all meshes
+                                        model.traverse(child => {
+                                            if (child instanceof THREE.Mesh) {
+                                                if (Array.isArray(child.material)) {
+                                                    child.material.forEach(mat => {
+                                                        mat.map = texture;
+                                                        mat.transparent = true;
+                                                        mat.needsUpdate = true;
+                                                    });
+                                                } else {
+                                                    child.material.map = texture;
+                                                    child.material.transparent = true;
+                                                    child.material.needsUpdate = true;
+                                                }
+                                            }
+                                        });
+                                        resolve(model);
+                                    },
+                                    undefined, // onProgress not needed
+                                    reject
+                                );
+                            });
+                        });
+                })
+                .then(modelWithTexture => {
+                    // Scale and position the model
+                    model.scale.set(0.014, 0.014, 0.014);
+                    model.rotation.set(0, 0, 0); // Remove 180-degree rotation to show face from outside
+                    model.position.set(0, 0, 0); // Center the model
+                    
+                    // Add to scene
+                    modelGroup.add(model);
+                    
+                    // Hide loading message
+                    document.getElementById('loading').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error loading model:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error').textContent = 
+                        'Error loading 3D model. Please try again or check the console for details.';
+                });
+            
+            // Control button functionality
+            let autoRotate = false;
+            
+            // Use pointer events instead of mouse events to avoid deprecated warnings
+            document.getElementById('resetBtn').addEventListener('pointerdown', function() {
+                controls.reset();
+            });
+            
+            document.getElementById('wireframeBtn').addEventListener('pointerdown', function() {
+                if (model) {
+                    model.traverse(function(child) {
+                        if (child instanceof THREE.Mesh) {
+                            child.material.wireframe = !child.material.wireframe;
+                        }
+                    });
+                }
+            });
+            
+            document.getElementById('textureBtn').addEventListener('pointerdown', function() {
+                if (model) {
+                    model.traverse(function(child) {
+                        if (child instanceof THREE.Mesh) {
+                            if (child.material.map) {
+                                child.material.map.enabled = !child.material.map.enabled;
+                                child.material.needsUpdate = true;
+                            }
+                        }
+                    });
+                }
+            });
+            
+            document.getElementById('rotateBtn').addEventListener('pointerdown', function() {
+                autoRotate = !autoRotate;
+                controls.autoRotate = autoRotate;
+                controls.autoRotateSpeed = 2.0;
+                this.textContent = autoRotate ? 'Stop Rotation' : 'Auto-rotate';
+            });
+            
+            // Use resize observer instead of window resize event
+            const resizeObserver = new ResizeObserver(() => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+            
+            resizeObserver.observe(container);
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotate rings slowly
+                rings[0].rotation.x += 0.001;
+                rings[0].rotation.y += 0.001;
+                rings[1].rotation.x += 0.001;
+                rings[1].rotation.z += 0.001;
+                rings[2].rotation.y += 0.001;
+                rings[2].rotation.z += 0.001;
+                
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+        }
+    </script>
+</body>
+</html> 

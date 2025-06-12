@@ -1,0 +1,40 @@
+
+# Ignore model files
+*.pt
+*.pkl
+*.h5
+*.ckpt
+
+# Ignore cache and compiled Python files
+__pycache__/
+*.py[cod]
+*.so
+
+# Ignore large media files
+*.mp4
+*.avi
+*.mov
+
+# Ignore temporary/output folders
+temp_*/
+morph_output/
+temp_morph_output/
+face_crop_output/
+srgan_output/
+stylegan_output/
+temp_face_crop/
+final_output/
+statistics/
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore Git and VS Code stuff
+.git/
+.vscode/
+.env
+*.log
+
+# Ignore PowerShell deployment scripts if not needed
+*.ps1
