@@ -1,157 +1,158 @@
 # Face-to-3D: AI-Powered Face Generation & 3D Modeling
 
-This application generates realistic 3D face models using StyleGAN and advanced 3D morphing techniques. It provides a web interface to create, view, and download 3D face models.
+This application transforms 2D face images into realistic 3D face models using advanced AI techniques. It provides a user-friendly web interface for creating, viewing, and downloading 3D face models.
 
 ## Features
 
-- Generate realistic face images using StyleGAN
-- Upscale images with SRGAN for enhanced quality
+- Generate realistic face images using AI
+- High-resolution image upscaling
 - Automatic 3D face model generation
-- Interactive 3D model viewer
+- Interactive 3D model viewer in browser
+- Download 3D models in OBJ format with textures
 - Global access option via ngrok
 
-## Requirements
+## System Requirements
 
-- Python 3.8+ with pip
-- Node.js and npm
+- Python 3.8 or higher
+- Node.js 14+ and npm
 - Windows OS (tested on Windows 10/11)
-- GPU recommended but not required (CPU mode supported)
+- CUDA-capable GPU recommended (but CPU mode is supported)
+- At least 8GB RAM
+- 2GB free disk space
 
-## Setup Instructions
+## Project Setup
 
-### 1. Clone the Repository
+### 1. Clone and Setup Environment
 
 ```bash
+# Clone the repository
 git clone <repository-url>
-cd Backend
-```
+cd <repository-name>
 
-### 2. Install Python Dependencies
+# Create and activate a virtual environment (recommended)
+python -m venv venv
+.\venv\Scripts\activate
 
-```bash
+# Install Python dependencies
 pip install -r requirements.txt
-```
 
-### 3. Install Frontend Dependencies
-
-```bash
+# Install frontend dependencies
 cd frontend
 npm install
 cd ..
 ```
 
-### 4. Download Model Files
+### 2. Environment Configuration
 
-Ensure you have the following model files in the correct locations:
-- StyleGAN model: `Stylegan Model/network-snapshot-000160.pkl`
-- SRGAN model: `SRGAN Model/netG_epoch_4_100.pth`
+Create a `.env` file in the root directory with the following variables:
+```env
+FLASK_ENV=development
+FLASK_APP=app.py
+PORT=5000
+```
 
 ## Running the Application
 
-### Local Development
+### Development Mode
 
-1. **Start the backend server:**
-   ```bash
-   python app.py
-   ```
+1. **Start the Backend Server:**
+```bash
+# From the root directory
+python app.py
+```
 
-2. **Start the frontend development server in a new terminal:**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+2. **Start the Frontend Development Server:**
+```bash
+# In a new terminal
+cd frontend
+npm run dev
+```
 
-3. **Access the application:**
-   - Backend API: http://localhost:5000
-   - Frontend development server: http://localhost:5173
+3. **Access the Application:**
+- Backend API: http://localhost:5000
+- Frontend development server: http://localhost:5173
 
-### Production Deployment
+### Production Mode
 
-For a production-ready build with backend and frontend served from the same server:
+For a production deployment with backend and frontend served together:
 
 ```bash
+# From the root directory
 powershell -File deploy.ps1
 ```
 
-This script:
-- Builds the React frontend
-- Starts the Flask server to serve both the API and frontend
-- Accesses the application at http://localhost:5000
+The application will be available at http://localhost:5000
 
-## Global Deployment with ngrok
+## Global Access with ngrok (Optional)
 
-To make your locally running application accessible globally:
+To make your local application accessible globally:
 
-### 1. Install ngrok
+1. **Install and Configure ngrok:**
+   - Sign up at [ngrok.com](https://ngrok.com)
+   - Get your authtoken
+   - Configure ngrok:
+     ```bash
+     ./frontend/ngrok.exe config add-authtoken YOUR_AUTHTOKEN
+     ```
 
-ngrok is already included in the repository in the `frontend` directory.
+2. **Deploy Globally:**
+   ```bash
+   # Option 1: Deploy everything at once
+   powershell -File deploy-global.ps1
 
-### 2. Sign up for ngrok
+   # Option 2: If server is already running
+   powershell -File start-ngrok.ps1
+   ```
 
-Create a free account at [ngrok.com](https://ngrok.com) and get your authtoken.
+## Project Structure
 
-### 3. Configure ngrok (one-time setup)
-
-```bash
-./frontend/ngrok.exe config add-authtoken YOUR_AUTHTOKEN
 ```
-Replace `YOUR_AUTHTOKEN` with the token from your ngrok dashboard.
-
-### 4. Deploy Globally
-
-There are two options to deploy your application globally:
-
-#### Option 1: Deploy Everything at Once
-
-Use the `deploy-global.ps1` script to build the frontend, start the backend, and expose it with ngrok:
-
-```bash
-powershell -File deploy-global.ps1
+├── app.py              # Main Flask application
+├── api.py             # API endpoints
+├── frontend/          # React frontend application
+├── requirements.txt   # Python dependencies
+├── .env              # Environment variables
+└── deploy scripts    # Various deployment scripts
 ```
-
-#### Option 2: Use with an Already Running Server
-
-If your backend server is already running, use the `start-ngrok.ps1` script:
-
-```bash
-powershell -File start-ngrok.ps1
-```
-
-### 5. Access Globally
-
-When ngrok starts, it will display a "Forwarding" URL like:
-```
-Forwarding https://xxxx-xxxx.ngrok-free.app -> http://localhost:5000
-```
-
-Share this URL with anyone worldwide to access your application running on your local machine.
-
-## Using the Application
-
-1. **Generate a Face:**
-   - Enter a seed value (0-999) or use the random seed button
-   - Click "Generate 3D Face"
-
-2. **View the Results:**
-   - The application will display the generated StyleGAN image, upscaled version, and 3D model
-   - The 3D model can be rotated and zoomed in the viewer
-
-3. **Download Files:**
-   - Use the download buttons to get the OBJ, MTL, and texture files
-   - These files can be imported into any 3D software that supports OBJ format
 
 ## Troubleshooting
 
-- **Permissions Issues:** Run the application as administrator or use the provided `run_as_admin.bat` script
-- **3D Model Not Loading:** Ensure your browser supports WebGL. The application will show a fallback view with a texture image if the 3D viewer fails.
-- **ngrok Connection Issues:** Check your internet connection and firewall settings. Make sure port 5000 is allowed for outgoing connections.
+### Common Issues and Solutions
 
-## Notes
+1. **Port Already in Use**
+   ```bash
+   # Check what's using port 5000
+   netstat -ano | findstr :5000
+   # Kill the process if needed (replace PID with actual process ID)
+   taskkill /PID <PID> /F
+   ```
 
-- With the free ngrok plan, you'll get a new URL each time you start ngrok
-- Your computer must stay turned on and connected to the internet while sharing your application globally
-- The free plan has limitations on bandwidth and connections
+2. **CUDA/GPU Issues**
+   - Ensure you have compatible NVIDIA drivers installed
+   - The application will fallback to CPU mode if CUDA is unavailable
+
+3. **Memory Issues**
+   - Close other memory-intensive applications
+   - Ensure you have at least 8GB of RAM available
+
+4. **Permission Issues**
+   - Run as administrator using `run_as_admin.bat`
+   - Check file permissions in the project directory
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
 ## License
 
-[Include license information here] 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with Flask and React
+- Uses advanced AI techniques for face generation and 3D modeling
+- Powered by PyTorch for deep learning operations 
